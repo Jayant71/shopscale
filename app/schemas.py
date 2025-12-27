@@ -18,3 +18,15 @@ class Product(ProductBase):
 
     class ConfigDict:
         from_attributes = True
+
+
+class ProductUpdate(BaseModel):
+    id: int | None = None
+    name: str | None = None
+    description: str | None = None
+    price: float | None = None
+    stock_quantity: int | None = None
+    category_id: int | None = None
+
+    class ConfigDict:
+        from_attributes = True
