@@ -3,7 +3,7 @@ name = "shopscale"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
     "faker>=39.0.0",
     "fastapi[standard]>=0.127.1",
