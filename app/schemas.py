@@ -1,6 +1,45 @@
 from pydantic import BaseModel
 
 
+class UserBase(BaseModel):
+    email: str
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class UserLogin(UserBase):
+    password: str
+
+
+class UserInDB(UserBase):
+    id: int
+    hashed_password: str
+    is_active: bool
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class User(UserBase):
+    id: int
+    is_active: bool
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    user_id: int | None = None
+    username: str | None = None
+
+
 class ProductBase(BaseModel):
     name: str
     description: str | None = None
