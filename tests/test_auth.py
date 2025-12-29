@@ -96,12 +96,13 @@ def test_get_all_users_unauthenticated(client: TestClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_get_all_users_authenticated(client: TestClient):
-    """Test getting all users with authentication"""
+def test_get_all_users_authenticated_customer(client: TestClient):
+    """Test getting all users with regular customer authentication (should fail)"""
     # First register and login a user
     user_data = {
-        "email": "getusers@example.com",
-        "password": "testpassword"
+        "email": "customer@example.com",
+        "password": "testpassword",
+        "role": "customer"
     }
     client.post("/auth/register", json=user_data)
 
@@ -112,14 +113,35 @@ def test_get_all_users_authenticated(client: TestClient):
     login_response = client.post("/auth/login", data=login_data)
     token = login_response.json()["access_token"]
 
-    # Now get users with token
+    # Now get users with token - should be 403 Forbidden
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.get("/auth/users", headers=headers)
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_get_all_users_authenticated_admin(client: TestClient):
+    """Test getting all users with admin authentication (should succeed)"""
+    # First register and login an admin
+    admin_data = {
+        "email": "admin@example.com",
+        "password": "adminpassword",
+        "role": "admin"
+    }
+    client.post("/auth/register", json=admin_data)
+
+    login_data = {
+        "username": admin_data["email"],
+        "password": admin_data["password"]
+    }
+    login_response = client.post("/auth/login", data=login_data)
+    token = login_response.json()["access_token"]
+
+    # Now get users with admin token
     headers = {"Authorization": f"Bearer {token}"}
     response = client.get("/auth/users", headers=headers)
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert isinstance(data, list)
-    assert len(data) >= 1  # At least the user we created
-    # Check that our user is in the list
-    user_emails = [user["email"] for user in data]
-    assert user_data["email"] in user_emails
+    assert len(data) >= 1

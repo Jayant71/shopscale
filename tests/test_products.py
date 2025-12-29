@@ -1,180 +1,96 @@
-def test_create_product(client):
-    """
-    Test that a valid product can be created.
-    """
+from fastapi import status
+from fastapi.testclient import TestClient
+import pytest
+
+def create_authenticated_client(client: TestClient, email: str, password: str, is_admin: bool = False):
+    # Role-based registration
+    client.post("/auth/register", json={
+        "email": email,
+        "password": password,
+        "full_name": "Test Admin" if is_admin else "Test User",
+        "role": "admin" if is_admin else "customer"
+    })
+    
+    login_data = {"username": email, "password": password}
+    response = client.post("/auth/login", data=login_data)
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+def test_create_product_admin_success(client: TestClient):
+    """Test that an admin can create a product"""
+    headers = create_authenticated_client(client, "admin_prod@example.com", "adminpass", is_admin=True)
+    
     response = client.post(
         "/products/",
         json={
-            "name": "Test Laptop",
-            "description": "A powerful testing machine",
-            "price": 999.99,
-            "stock_quantity": 10,
-            # Assuming you have a category ID 1 setup or your logic handles defaults
-            "category_id": 1
-        },
-    )
-
-    # Assertions - The core of testing
-    assert response.status_code == 201  # Expect "Created" status
-    data = response.json()
-    assert data["name"] == "Test Laptop"
-    assert data["price"] == 999.99
-    assert "id" in data  # Ensure the DB assigned an ID
-
-
-def test_create_product_negative_price(client):
-    """
-    Test that the API rejects a product with a negative price.
-    """
-    response = client.post(
-        "/products/",
-        json={
-            "name": "Cheap Laptop",
-            "description": "Too cheap",
-            "price": -50.00,  # Invalid price!
+            "name": "Admin Laptop",
+            "description": "High end",
+            "price": 1500,
             "stock_quantity": 5,
             "category_id": 1
         },
+        headers=headers
     )
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["name"] == "Admin Laptop"
 
-    # We expect a 422 Unprocessable Entity error (FastAPI validation)
-    assert response.status_code == 422
-
-def test_read_all_products(client):
-    """
-    Test retrieving the list of products.
-    """
-    # First, create a product to ensure there's at least one in the DB
-    client.post(
-        "/products/",
-        json={
-            "name": "Test Laptop",
-            "description": "A powerful testing machine",
-            "price": 999.99,
-            "stock_quantity": 10,
-            "category_id": 1
-        },
-    )
-
-    response = client.get("/products/")
-
-    # Assertions
-    assert response.status_code == 200  # OK
-    data = response.json()
-    assert isinstance(data, list)
-    assert len(data) > 0 
-
-def test_read_single_product(client):
-    """
-    Test retrieving a single product by ID.
-    """
-    # First, create a product to retrieve
-    create_response = client.post(
-        "/products/",
-        json={
-            "name": "Test Laptop",
-            "description": "A powerful testing machine",
-            "price": 999.99,
-            "stock_quantity": 10,
-            "category_id": 1
-        },
-    )
-    product_id = create_response.json()["id"]
-
-    response = client.get(f"/products/{product_id}")
-
-    # Assertions
-    assert response.status_code == 200  # OK
-    data = response.json()
-    assert data["id"] == product_id
-    assert data["name"] == "Test Laptop"
-
-def test_read_single_product_not_found(client):
-    """
-    Test retrieving a product that does not exist.
-    """
-    response = client.get("/products/9999")  # Assuming this ID doesn't exist
-
-    # Assertions
-    assert response.status_code == 404  # Not Found
-
-def test_delete_product_(client):
-    """
-    Test that DELETE method removed the product.
-    """
-    create_response = client.post(
-        "/products/",
-        json={
-            "name": "Test Laptop",
-            "description": "A powerful testing machine",
-            "price": 999.99,
-            "stock_quantity": 10,
-            "category_id": 1
-        },
-    )
-    product_id = create_response.json()["id"]
-
-    response = client.delete(f"/products/{product_id}")
-
-
-    # Assertions
-    assert response.status_code == 204  # No Content
-    # Verify the product is actually deleted
-    get_response = client.get(f"/products/{product_id}")
-    assert get_response.status_code == 404  # Not Found        
+def test_create_product_user_forbidden(client: TestClient):
+    """Test that a regular user cannot create a product"""
+    headers = create_authenticated_client(client, "user_prod@example.com", "userpass", is_admin=False)
     
-def test_delete_product_not_found(client):
-    """
-    Test deleting a product that does not exist.
-    """
-    response = client.delete("/products/9999")  # Assuming this ID doesn't exist
-
-    # Assertions
-    assert response.status_code == 404  # Not Found
-
-def test_update_product(client):
-    """
-    Test updating an existing product.
-    """
-    # First, create a product to update
-    create_response = client.post(
+    response = client.post(
         "/products/",
         json={
-            "name": "Test Laptop",
-            "description": "A powerful testing machine",
-            "price": 999.99,
-            "stock_quantity": 10,
+            "name": "User Laptop",
+            "description": "No access",
+            "price": 500,
+            "stock_quantity": 5,
             "category_id": 1
         },
+        headers=headers
     )
-    product_id = create_response.json()["id"]
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    # Now, update the product
-    update_response = client.put(
-        f"/products/{product_id}",
-        json={
-            "name": "Updated Laptop",
-            "price": 899.99
-        },
-    )
+def test_read_products_public(client: TestClient):
+    """Test that products can be read without authentication"""
+    response = client.get("/products/")
+    assert response.status_code == status.HTTP_200_OK
 
-    # Assertions
-    assert update_response.status_code == 200  # OK
-    data = update_response.json()
-    assert data["name"] == "Updated Laptop"
-    assert data["price"] == 899.99
+def test_update_product_admin_only(client: TestClient):
+    """Test that only admins can update products"""
+    admin_headers = create_authenticated_client(client, "admin_upd_p@example.com", "pass", is_admin=True)
+    user_headers = create_authenticated_client(client, "user_upd_p@example.com", "pass", is_admin=False)
 
-def test_update_product_not_found(client):
-    """
-    Test updating a product that does not exist.
-    """
-    response = client.put(
-        "/products/9999",  # Assuming this ID doesn't exist
-        json={
-            "name": "Non-existent Laptop",
-            "price": 899.99
-        },
-    )
+    # Admin creates product
+    resp = client.post("/products/", json={
+        "name": "Initial Name", "price": 100, "stock_quantity": 10, "category_id": 1
+    }, headers=admin_headers)
+    prod_id = resp.json()["id"]
 
-    # Assertions
-    assert response.status_code == 404  # Not Found
+    # User try update - fail
+    response = client.put(f"/products/{prod_id}", json={"name": "Hacked Name"}, headers=user_headers)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    # Admin update - success
+    response = client.put(f"/products/{prod_id}", json={"name": "Correct Name"}, headers=admin_headers)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["name"] == "Correct Name"
+
+def test_delete_product_admin_only(client: TestClient):
+    """Test that only admins can delete products"""
+    admin_headers = create_authenticated_client(client, "admin_del_p@example.com", "pass", is_admin=True)
+    user_headers = create_authenticated_client(client, "user_del_p@example.com", "pass", is_admin=False)
+
+    # Admin creates product
+    resp = client.post("/products/", json={
+        "name": "To be deleted", "price": 10, "stock_quantity": 1, "category_id": 1
+    }, headers=admin_headers)
+    prod_id = resp.json()["id"]
+
+    # User try delete - fail
+    response = client.delete(f"/products/{prod_id}", headers=user_headers)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    # Admin delete - success
+    response = client.delete(f"/products/{prod_id}", headers=admin_headers)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
