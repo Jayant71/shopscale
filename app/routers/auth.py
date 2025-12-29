@@ -55,7 +55,7 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid credentials"
+            detail="Email not registered"
         )
     if not verify_password(form_data.password, str(user.hashed_password)):
         raise HTTPException(
