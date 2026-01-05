@@ -12,9 +12,9 @@ import os
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-SECRET_KEY = os.getenv("SECRET_KEY", "your_default_secret_key")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your_default_secret_key")
 ALGORITHM = "HS256"
-TOKEN_EXPIRY_MINUTES = 1
+TOKEN_EXPIRY_MINUTES = 30
 
 password_hasher = PasswordHash.recommended()
 
@@ -39,7 +39,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def get_current_user(token:  str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> schemas.User:
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> schemas.User:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("id")
@@ -57,3 +57,21 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=404, detail="User not found")
     return user
+
+
+def is_admin(user: schemas.User = Depends(get_current_user)):
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=403, detail="Not authorized as admin")
+    return True
+
+# Test
+
+
+def get_token_data(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.PyJWTError as e:
+        raise HTTPException(
+            status_code=401, detail=str(e))

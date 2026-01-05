@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 
@@ -6,6 +7,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+    fullname: Optional[str] = None
     password: str
 
 
@@ -25,6 +27,7 @@ class UserInDB(UserBase):
 class User(UserBase):
     id: int
     is_active: bool
+    role: str
 
     class ConfigDict:
         from_attributes = True
@@ -36,8 +39,13 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    user_id: int | None = None
+    id: int | None = None
     username: str | None = None
+    role: str
+
+
+class TokenRequest(BaseModel):
+    token: str
 
 
 class ProductBase(BaseModel):

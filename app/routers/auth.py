@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
 from .. import schemas, models
-from app.utils.oauth2 import get_password_hash, verify_password, get_current_user, create_access_token
+from app.utils.oauth2 import get_password_hash, verify_password, get_current_user, create_access_token, get_token_data
 
 
 router = APIRouter(
@@ -26,6 +26,7 @@ def register_user(user_create: schemas.UserCreate, db: Session = Depends(get_db)
     hashed_password = get_password_hash(user_create.password)
 
     new_user = models.User(
+        full_name=user_create.fullname,
         email=user_create.email,
         hashed_password=hashed_password
     )
@@ -39,6 +40,11 @@ def register_user(user_create: schemas.UserCreate, db: Session = Depends(get_db)
 
 @router.get("/users", response_model=List[schemas.User])
 def get_all_users(db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this resource"
+        )
     user = db.query(models.User).all()
     if not user:
         raise HTTPException(
@@ -62,6 +68,13 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Wrong password"
         )
-    access_token = create_access_token(data={"id": user.id})
+    access_token = create_access_token(
+        data={"id": user.id, "role": user.role, "username": user.email})
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+# Test route to verify the token data
+@router.post("/verifytoken", response_model=schemas.TokenData)
+def verify_token(token: schemas.TokenRequest):
+    return get_token_data(token=token.token)
