@@ -22,4 +22,4 @@ app.include_router(
 
 @app.get("/")
 def root():
-    return {"Hello": "World"}
+    return {"message": "Welcome to ShopScale API"}
