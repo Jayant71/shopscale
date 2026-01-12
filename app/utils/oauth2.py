@@ -63,7 +63,7 @@ def is_admin(user: schemas.User = Depends(get_current_user)):
     if user.role != "admin":
         raise HTTPException(
             status_code=403, detail="Not authorized as admin")
-    return True
+    return user
 
 # Test
 

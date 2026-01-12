@@ -13,8 +13,9 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[schemas.Product], status_code=status.HTTP_200_OK)
-def read_products(db: Session = Depends(get_db)):
-    products = db.query(models.Product).all()
+def read_products(db: Session = Depends(get_db), page: int = 1, limit: int = 1):
+    skip = (page - 1) * limit
+    products = db.query(models.Product).offset(skip).limit(limit).all()
     return products
 
 
@@ -30,13 +31,8 @@ def read_product(product_id: int, db: Session = Depends(get_db)):
     return db_product
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Product)
-def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db), is_admin: bool = Depends(is_admin)):
-    if not is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to create products"
-        )
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Product, dependencies=[Depends(is_admin)])
+def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db), ):
     if product.price < 0:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -49,13 +45,8 @@ def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)
     return db_product
 
 
-@router.put("/{product_id}", status_code=status.HTTP_200_OK, response_model=schemas.Product)
-def update_product(product_id: int, product: schemas.ProductUpdate, db: Session = Depends(get_db), is_admin: bool = Depends(is_admin)):
-    if not is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Not Authorized"
-        )
+@router.put("/{product_id}", status_code=status.HTTP_200_OK, response_model=schemas.Product, dependencies=[Depends(is_admin)])
+def update_product(product_id: int, product: schemas.ProductUpdate, db: Session = Depends(get_db)):
     if product.price is not None and product.price < 0:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -70,13 +61,8 @@ def update_product(product_id: int, product: schemas.ProductUpdate, db: Session 
     return db_product
 
 
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_product(product_id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
-    if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to delete products"
-        )
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(is_admin)])
+def delete_product(product_id: int, db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(
         models.Product.id == product_id).first()
     if not product:
