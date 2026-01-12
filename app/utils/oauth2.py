@@ -1,5 +1,4 @@
 from fastapi import Depends, HTTPException
-from httpx import get
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer

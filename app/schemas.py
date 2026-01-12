@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class UserBase(BaseModel):
@@ -63,8 +63,7 @@ class ProductCreate(ProductBase):
 class Product(ProductBase):
     id: int
 
-    class ConfigDict:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProductUpdate(BaseModel):
@@ -75,5 +74,56 @@ class ProductUpdate(BaseModel):
     stock_quantity: int | None = None
     category_id: int | None = None
 
+    model_config = ConfigDict(from_attributes=True)
+
+class Cart(BaseModel):
+    id: int
+    user_id: int
+
     class ConfigDict:
         from_attributes = True
+
+class CartItem(BaseModel):
+    id: int
+    cart_id: int
+    product_id: int
+    quantity: int
+
+    class ConfigDict:
+        from_attributes = True
+
+class CartItemAdd(BaseModel):
+    product_id: int
+    quantity: int = 1
+
+class CartitemRemove(BaseModel):
+    product_id: int
+    quantity: int = 1
+
+class CartItemInList(BaseModel):
+    product: Product
+    quantity: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+class OrderBase(BaseModel):
+    user_id: int
+    total_amount: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+class OrderCreate(OrderBase):
+    pass
+
+class Order(OrderBase):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+class OrderItemBase(BaseModel):
+    order_id: int
+    product_id: int
+    quantity: int
+    price_at_purchase: float
+
+    model_config = ConfigDict(from_attributes=True)

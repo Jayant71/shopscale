@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
+
+from app.routers import cart
 from .routers import products, auth
 from dotenv import load_dotenv
 from .database import engine, Base
@@ -14,6 +16,9 @@ app.include_router(
     auth.router
 )
 
+app.include_router(
+    cart.router
+)
 
 @app.get("/")
 def root():

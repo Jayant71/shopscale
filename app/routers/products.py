@@ -1,4 +1,3 @@
-from pyexpat import model
 from turtle import st
 from fastapi import APIRouter, status, HTTPException, Depends
 from sqlalchemy.orm import Session
@@ -13,7 +12,7 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[schemas.Product], status_code=status.HTTP_200_OK)
-def read_products(db: Session = Depends(get_db), page: int = 1, limit: int = 1):
+def read_products(db: Session = Depends(get_db), page: int = 1, limit: int = 10):
     skip = (page - 1) * limit
     products = db.query(models.Product).offset(skip).limit(limit).all()
     return products

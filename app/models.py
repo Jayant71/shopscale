@@ -1,4 +1,3 @@
-from venv import create
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
 from .database import Base
 from sqlalchemy.orm import relationship
@@ -15,6 +14,7 @@ class User(Base):
     is_active = Column(Integer, default=True, server_default='1')
     created_at = Column(DateTime(timezone=True),
                         nullable=False, server_default=func.now())
+    cart = relationship("Cart", back_populates="user", uselist=False)
     orders = relationship("Order", back_populates="user")
 
 
@@ -27,7 +27,6 @@ class Category(Base):
     created_at = Column(DateTime(timezone=True),
                         nullable=False, server_default=func.now())
     products = relationship("Product", back_populates="category")
-
 
 class Product(Base):
     __tablename__ = "products"
@@ -43,6 +42,7 @@ class Product(Base):
                         nullable=False, server_default=func.now())
     category = relationship("Category", back_populates="products")
     order_items = relationship("OrderItem", back_populates="product")
+    cart_items = relationship("CartItem", back_populates="product")
 
 
 class Order(Base):
@@ -69,3 +69,25 @@ class OrderItem(Base):
                         nullable=False, server_default=func.now())
     order = relationship("Order", back_populates="order_items")
     product = relationship("Product", back_populates="order_items")
+
+class Cart(Base):
+    __tablename__ = "carts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    created_at = Column(DateTime(timezone=True),
+                        nullable=False, server_default=func.now())
+    user = relationship("User", back_populates="cart")
+    cart_items = relationship("CartItem", back_populates="cart")
+
+class CartItem(Base):
+    __tablename__ = "cart_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    cart_id = Column(Integer, ForeignKey("carts.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, nullable=False, server_default='1', default=1)
+    created_at = Column(DateTime(timezone=True),
+                        nullable=False, server_default=func.now())
+    cart = relationship("Cart", back_populates="cart_items")
+    product = relationship("Product", back_populates="cart_items")
