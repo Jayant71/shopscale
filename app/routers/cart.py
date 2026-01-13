@@ -18,21 +18,14 @@ def get_cart_items(db: Session = Depends(get_db), current_user: schemas.User = D
     cart = db.query(models.Cart).filter(
         models.Cart.user_id == current_user.id).first()
     if not cart:
-        return {"items": []}
+        return []
     items = (
         db.query(models.CartItem)
         .options(joinedload(models.CartItem.product))
         .filter(models.CartItem.cart_id == cart.id)
         .all()
     )
-    result = [
-        schemas.CartItemInList(
-            product=schemas.Product.model_validate(item.product),
-            quantity=item.quantity  # type: ignore
-        )
-        for item in items
-    ]
-    return result
+    return items
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)

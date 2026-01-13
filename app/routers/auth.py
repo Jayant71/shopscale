@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
 from .. import schemas, models
-from app.utils.oauth2 import get_password_hash, verify_password, get_current_user, create_access_token, get_token_data
+from app.utils.oauth2 import get_password_hash, is_admin, verify_password, get_current_user, create_access_token, get_token_data
 
 
 router = APIRouter(
@@ -38,13 +38,8 @@ def register_user(user_create: schemas.UserCreate, db: Session = Depends(get_db)
     return new_user
 
 
-@router.get("/users", response_model=List[schemas.User])
-def get_all_users(db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
-    if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this resource"
-        )
+@router.get("/users", response_model=List[schemas.User], dependencies=[Depends(is_admin)])
+def get_all_users(db: Session = Depends(get_db)):
     user = db.query(models.User).all()
     if not user:
         raise HTTPException(

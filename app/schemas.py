@@ -108,6 +108,7 @@ class CartitemRemove(BaseModel):
 
 
 class CartItemInList(BaseModel):
+    id: int
     product: Product
     quantity: int
 
