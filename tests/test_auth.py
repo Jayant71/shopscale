@@ -102,7 +102,6 @@ def test_get_all_users_authenticated_customer(client: TestClient):
     user_data = {
         "email": "customer@example.com",
         "password": "testpassword",
-        "role": "customer"
     }
     client.post("/auth/register", json=user_data)
 
@@ -120,13 +119,12 @@ def test_get_all_users_authenticated_customer(client: TestClient):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_all_users_authenticated_admin(client: TestClient):
+def test_get_all_users_authenticated_admin(client: TestClient, mock_current_user_admin):
     """Test getting all users with admin authentication (should succeed)"""
     # First register and login an admin
     admin_data = {
         "email": "admin@example.com",
         "password": "adminpassword",
-        "role": "admin"
     }
     client.post("/auth/register", json=admin_data)
 

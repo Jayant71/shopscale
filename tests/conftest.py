@@ -37,7 +37,7 @@ app.dependency_overrides[get_db] = override_get_db
 # 3. Create a Test Client Fixture
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def client():
     # Create tables in the test DB
     Base.metadata.create_all(bind=engine)
@@ -47,3 +47,16 @@ def client():
 
     # Drop tables after tests finish (Clean up)
     Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture
+def mock_current_user_admin():
+    from app.utils.oauth2 import is_admin
+
+    def mock_is_admin():
+        return True
+
+    app.dependency_overrides[is_admin] = mock_is_admin
+    yield
+    if is_admin in app.dependency_overrides:
+        del app.dependency_overrides[is_admin]
