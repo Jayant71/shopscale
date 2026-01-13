@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 
-from app.routers import cart
+from app.routers import cart, orders
 from .routers import products, auth
 from dotenv import load_dotenv
 from .database import engine, Base
@@ -15,10 +15,13 @@ app.include_router(
 app.include_router(
     auth.router
 )
-
 app.include_router(
     cart.router
 )
+app.include_router(
+    orders.router
+)
+
 
 @app.get("/")
 def root():

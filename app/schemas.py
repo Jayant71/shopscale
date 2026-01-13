@@ -1,4 +1,6 @@
-from typing import Optional
+from datetime import datetime
+from typing import List, Optional
+from venv import create
 from pydantic import BaseModel, ConfigDict
 
 
@@ -76,12 +78,14 @@ class ProductUpdate(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class Cart(BaseModel):
     id: int
     user_id: int
 
     class ConfigDict:
         from_attributes = True
+
 
 class CartItem(BaseModel):
     id: int
@@ -92,13 +96,16 @@ class CartItem(BaseModel):
     class ConfigDict:
         from_attributes = True
 
+
 class CartItemAdd(BaseModel):
     product_id: int
     quantity: int = 1
 
+
 class CartitemRemove(BaseModel):
     product_id: int
     quantity: int = 1
+
 
 class CartItemInList(BaseModel):
     product: Product
@@ -106,24 +113,36 @@ class CartItemInList(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class OrderBase(BaseModel):
     user_id: int
     total_amount: float
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class OrderCreate(OrderBase):
     pass
 
-class Order(OrderBase):
-    id: int
-
-    model_config = ConfigDict(from_attributes=True)
 
 class OrderItemBase(BaseModel):
     order_id: int
     product_id: int
     quantity: int
     price_at_purchase: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderItem(OrderItemBase):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Order(OrderBase):
+    id: int
+    order_items: List[OrderItem] = []
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
