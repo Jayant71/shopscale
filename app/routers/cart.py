@@ -64,7 +64,7 @@ def add_item_to_cart(product_add: schemas.CartItemAdd, db: Session = Depends(get
 
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
-def remove_item_from_cart(product_remove: schemas.CartitemRemove, db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
+def remove_item_from_cart(product_remove: int, quantity: int = 1, db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
     cart = db.query(models.Cart).filter(
         models.Cart.user_id == current_user.id).first()
     if not cart:
@@ -73,26 +73,26 @@ def remove_item_from_cart(product_remove: schemas.CartitemRemove, db: Session = 
             detail="Cart not found"
         )
     cart_item = db.query(models.CartItem).filter(models.CartItem.cart_id ==
-                                                 cart.id, models.CartItem.product_id == product_remove.product_id).first()
+                                                 cart.id, models.CartItem.product_id == product_remove).first()
     if not cart_item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Product not in cart"
         )
-    if cart_item.quantity < product_remove.quantity:  # type: ignore
+    if cart_item.quantity < quantity:  # type: ignore
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot remove more items than present in cart"
         )
     product = db.query(models.Product).filter(
-        models.Product.id == product_remove.product_id).first()
+        models.Product.id == product_remove).first()
     if not product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Product not in inventory"
         )
-    cart_item.quantity -= product_remove.quantity  # type: ignore
-    product.stock_quantity += product_remove.quantity  # type: ignore
+    cart_item.quantity -= quantity  # type: ignore
+    product.stock_quantity += quantity  # type: ignore
     if cart_item.quantity == 0:  # type: ignore
         db.delete(cart_item)
     db.commit()
