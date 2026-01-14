@@ -8,7 +8,7 @@ from app.database import get_db
 from app import models, schemas
 import jwt
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 SECRET_KEY = config.jwt_secret_key

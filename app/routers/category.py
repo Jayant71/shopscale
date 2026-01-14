@@ -1,7 +1,5 @@
-from urllib import response
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from websockets import route
 
 from app import models, schemas
 from app.database import get_db

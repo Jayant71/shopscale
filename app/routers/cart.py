@@ -99,7 +99,7 @@ def remove_item_from_cart(product_remove: int, quantity: int = 1, db: Session = 
     return
 
 
-@router.get("/checkout", status_code=status.HTTP_200_OK, response_model=schemas.Order)
+@router.post("/checkout", status_code=status.HTTP_200_OK, response_model=schemas.Order)
 def checkout_cart(db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
     cart = db.query(models.Cart).filter(
         models.Cart.user_id == current_user.id).first()
