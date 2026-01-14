@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, func
 from .database import Base
 from sqlalchemy.orm import relationship
 
@@ -35,7 +35,7 @@ class Product(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     description = Column(String, nullable=True)
-    price = Column(Integer, nullable=False)
+    price = Column(Float, nullable=False)
     stock_quantity = Column(Integer, nullable=False,
                             server_default='0', default=0)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
@@ -51,7 +51,7 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    total_amount = Column(Integer, nullable=False)
+    total_amount = Column(Float, nullable=False)
     created_at = Column(DateTime(timezone=True),
                         nullable=False, server_default=func.now())
     user = relationship("User", back_populates="orders")
@@ -65,7 +65,7 @@ class OrderItem(Base):
     order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     quantity = Column(Integer, nullable=False, server_default='1', default=1)
-    price_at_purchase = Column(Integer, nullable=False)
+    price_at_purchase = Column(Float, nullable=False)
     created_at = Column(DateTime(timezone=True),
                         nullable=False, server_default=func.now())
     order = relationship("Order", back_populates="order_items")

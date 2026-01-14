@@ -6,7 +6,6 @@ from app.routers import cart, category, orders
 from .routers import products, auth
 from .database import engine
 
-models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 app.add_middleware(
