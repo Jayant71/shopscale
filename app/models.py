@@ -11,7 +11,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String, nullable=False)
     role = Column(String, server_default="client")
-    is_active = Column(Integer, default=True, server_default='1')
+    is_active = Column(Integer, default=1, server_default='1')
     created_at = Column(DateTime(timezone=True),
                         nullable=False, server_default=func.now())
     cart = relationship("Cart", back_populates="user", uselist=False)
@@ -27,6 +27,7 @@ class Category(Base):
     created_at = Column(DateTime(timezone=True),
                         nullable=False, server_default=func.now())
     products = relationship("Product", back_populates="category")
+
 
 class Product(Base):
     __tablename__ = "products"
@@ -70,15 +71,18 @@ class OrderItem(Base):
     order = relationship("Order", back_populates="order_items")
     product = relationship("Product", back_populates="order_items")
 
+
 class Cart(Base):
     __tablename__ = "carts"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    user_id = Column(Integer, ForeignKey("users.id"),
+                     nullable=False, unique=True)
     created_at = Column(DateTime(timezone=True),
                         nullable=False, server_default=func.now())
     user = relationship("User", back_populates="cart")
     cart_items = relationship("CartItem", back_populates="cart")
+
 
 class CartItem(Base):
     __tablename__ = "cart_items"

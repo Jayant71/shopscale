@@ -37,6 +37,13 @@ def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Price must be non-negative"
         )
+    id = db.query(models.Category).filter(
+        models.Category.id == product.category_id).first()
+    if not id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Category not found with id {product.category_id}"
+        )
     db_product = models.Product(**product.model_dump())
     db.add(db_product)
     db.commit()
