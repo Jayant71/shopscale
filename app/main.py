@@ -6,6 +6,7 @@ from app.routers import cart, category, orders
 from .routers import products, auth
 from .database import engine
 
+
 app = FastAPI()
 
 app.add_middleware(
@@ -27,6 +28,13 @@ app.include_router(category.router)
 async def process_time_middleware(request, call_next):
     return await add_process_time_header(request, call_next)
 
+@app.get("/health", tags=["health"])
+async def health_check():
+    return {
+        "status": "healthy",
+        "database": "connected",
+        "version": "1.0.0"
+    }
 
 @app.get("/")
 def root():
