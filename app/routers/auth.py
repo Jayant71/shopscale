@@ -35,6 +35,11 @@ def register_user(user_create: schemas.UserCreate, db: Session = Depends(get_db)
     db.commit()
     db.refresh(new_user)
 
+    cart = models.Cart(user_id=new_user.id)
+    db.add(cart)
+    db.commit()
+    db.refresh(cart)
+
     return new_user
 
 
