@@ -147,3 +147,23 @@ class Order(OrderBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CategoryBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+class Category(CategoryBase):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CategoryCreate(CategoryBase):
+    pass
+
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
