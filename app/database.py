@@ -1,12 +1,11 @@
-import os
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
-load_dotenv()
+
+from app.core.config import config
 
 Base = declarative_base()
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./shopscale.db")
+DATABASE_URL = config.database_url
 
 if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(

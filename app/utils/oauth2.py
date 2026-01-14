@@ -1,3 +1,4 @@
+from app.core.config import config
 from fastapi import Depends, HTTPException
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
@@ -6,12 +7,11 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
 import jwt
-import os
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your_default_secret_key")
+SECRET_KEY = config.jwt_secret_key
 ALGORITHM = "HS256"
 TOKEN_EXPIRY_MINUTES = 30
 
