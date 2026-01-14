@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app import models
-from app.core.middleware import add_process_time_header
+from app.core.middleware import add_process_time_header, add_request_id_header
 from app.routers import cart, category, orders
 from .routers import products, auth
 from .database import engine
@@ -27,6 +27,10 @@ app.include_router(category.router)
 @app.middleware("http")
 async def process_time_middleware(request, call_next):
     return await add_process_time_header(request, call_next)
+
+@app.middleware("http")
+async def request_id_middleware(request, call_next):
+    return await add_request_id_header(request, call_next)
 
 @app.get("/health", tags=["health"])
 async def health_check():
