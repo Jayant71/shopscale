@@ -52,7 +52,7 @@ def test_add_item_to_cart_success(client: TestClient, mock_current_user_admin):
     }, headers=headers)
     assert response.status_code == status.HTTP_201_CREATED
     product_id = response.json()["id"]
-    response = client.post("/cart/", json={
+    response = client.post("/cart/add", json={
         "product_id": product_id
     }, headers=headers)
     assert response.status_code == status.HTTP_201_CREATED
@@ -78,10 +78,10 @@ def test_add_same_item_to_cart_success(client: TestClient, mock_current_user_adm
     }, headers=headers)
     assert response.status_code == status.HTTP_201_CREATED
     product_id = response.json()["id"]
-    response = client.post("/cart/", json={
+    response = client.post("/cart/add", json={
         "product_id": product_id
     }, headers=headers)
-    response = client.post("/cart/", json={
+    response = client.post("/cart/add", json={
         "product_id": product_id
     }, headers=headers)
     assert response.status_code == status.HTTP_201_CREATED
@@ -99,7 +99,7 @@ def test_add_item_to_cart_not_in_inventory(client: TestClient, mock_current_user
     headers = create_authenticated_client(
         client, "user@example.com", "testpassword")
 
-    response = client.post("/cart/", json={
+    response = client.post("/cart/add", json={
         "product_id": 9999
     }, headers=headers)
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -119,7 +119,7 @@ def test_add_item_to_cart_out_of_stock(client: TestClient, mock_current_user_adm
     }, headers=headers)
     assert response.status_code == status.HTTP_201_CREATED
     product_id = response.json()["id"]
-    response = client.post("/cart/", json={
+    response = client.post("/cart/add", json={
         "product_id": product_id
     }, headers=headers)
     assert response.status_code == status.HTTP_400_BAD_REQUEST

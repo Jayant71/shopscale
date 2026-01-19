@@ -1,7 +1,6 @@
 from fastapi import Depends, HTTPException, APIRouter, status
 from sqlalchemy.orm import Session
 from typing import List
-
 from app import models, schemas
 from app.database import get_db
 from app.utils.oauth2 import get_current_user
@@ -28,7 +27,7 @@ def get_cart_items(db: Session = Depends(get_db), current_user: schemas.User = D
     return items
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/add", status_code=status.HTTP_201_CREATED)
 def add_item_to_cart(product_add: schemas.CartItemAdd, db: Session = Depends(get_db), current_user: schemas.User = Depends(get_current_user)):
     product = db.query(models.Product).filter(
         models.Product.id == product_add.product_id).first()

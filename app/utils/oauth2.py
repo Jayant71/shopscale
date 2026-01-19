@@ -1,12 +1,13 @@
+from sqlalchemy import select
 from app.core.config import config
 from fastapi import Depends, HTTPException
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
 import jwt
+from sqlalchemy.ext.asyncio import AsyncSession
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -38,20 +39,21 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> schemas.User:
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> schemas.User:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("id")
         if user_id is None:
             raise ValueError("Invalid token")
-        return get_user(user_id=int(user_id), db=db)
+        return await get_user(user_id=int(user_id), db=db)
     except jwt.PyJWTError as e:
         raise HTTPException(
             status_code=401, detail=str(e))
 
 
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(models.User).filter(models.User.id == user_id))
+    user = result.scalars().first()
     if not user:
         raise HTTPException(
             status_code=404, detail="User not found")
