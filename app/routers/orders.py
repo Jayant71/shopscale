@@ -23,7 +23,7 @@ async def read_orders(db: AsyncSession = Depends(get_db), current_user: models.U
             .where(models.Order.user_id == current_user.id)
             .order_by(models.Order.created_at.desc())
         )
-        orders = result.scalars().all()
+        orders = result.unique().scalars().all()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

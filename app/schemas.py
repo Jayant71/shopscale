@@ -67,6 +67,16 @@ class Product(ProductBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProductInCart(BaseModel):
+    id: int
+    name: str
+    description: str | None = None
+    price: float
+    category_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ProductUpdate(BaseModel):
     id: int | None = None
     name: str | None = None
@@ -108,7 +118,7 @@ class CartitemRemove(BaseModel):
 
 class CartItemInList(BaseModel):
     id: int
-    product: Product
+    product: ProductInCart
     quantity: int
 
     model_config = ConfigDict(from_attributes=True)
